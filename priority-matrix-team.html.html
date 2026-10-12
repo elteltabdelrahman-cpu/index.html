@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Priority Matrix – Urgent and Important</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:dark;
+  --plum:#91195A;
+  --gold:#F0BC18;
+  --ink:#231F20;
+  --slate:#393C3C;
+  --plum-lit:#C23A85;
+  --paper:#F6F1F3;
+  --muted:#C9C1C5;
+  --line:rgba(246,241,243,.14);
+  --display:'Anton','Bebas Neue',Impact,'Arial Narrow',sans-serif;
+  --body:'DM Sans',system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background-color:var(--ink)}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+body{
+  margin:0;min-height:100vh;color:var(--paper);font-family:var(--body);-webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(900px 480px at 85% -5%,rgba(145,25,90,.45),transparent 65%),
+    radial-gradient(700px 400px at 0% 100%,rgba(240,188,24,.07),transparent 60%),
+    var(--ink);
+  background-color:var(--ink);
+}
+.sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.app{max-width:1500px;margin:0 auto;padding:clamp(10px,2vw,24px);display:flex;flex-direction:column;gap:clamp(12px,1.6vw,20px)}
+
+/* header + add bar */
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 20px}
+h1{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(30px,3.6vw,46px);line-height:1;letter-spacing:.03em;color:var(--gold);text-transform:uppercase}
+.sub{margin:6px 0 0;font-size:15px;color:var(--muted)}
+.top-actions{display:flex;align-items:center;gap:14px}
+.summary{font-weight:700;color:var(--muted);font-size:15px}
+.addbar{display:flex;gap:10px}
+.addbar input{
+  flex:1;min-width:0;appearance:none;font:inherit;font-size:18px;color:var(--paper);
+  padding:15px 18px;border-radius:16px;background:rgba(35,31,32,.78);border:2px solid var(--line);
+}
+.addbar input::placeholder{color:#9A9396}
+.addbar input:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-color:var(--gold)}
+.btn{
+  appearance:none;border:0;cursor:pointer;font:inherit;font-weight:700;font-size:17px;white-space:nowrap;
+  padding:14px 26px;border-radius:16px;background:var(--gold);color:var(--ink);transition:filter .15s,transform .1s;
+}
+.btn:hover{filter:brightness(1.08)}
+.btn:active{transform:translateY(1px)}
+.btn.quiet{background:transparent;color:var(--paper);border:2px solid var(--line);padding:9px 16px;font-size:15px;border-radius:12px}
+.btn.quiet:hover{border-color:var(--gold);filter:none}
+.btn:focus-visible,.ib:focus-visible,.check:focus-visible,.linkbtn:focus-visible,.menu button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+/* board */
+.board{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+@media (min-width:980px){
+  .board{grid-template-columns:300px minmax(0,1fr);align-items:start}
+  .tray{position:sticky;top:calc(16px + env(safe-area-inset-top,0px))}
+  .tray .list{max-height:calc(100vh - 230px);overflow:auto;padding:2px}
+}
+
+.zone,.tray{
+  position:relative;display:flex;flex-direction:column;gap:12px;
+  padding:clamp(12px,1.5vw,18px);border-radius:20px;
+  --card:#231F20;--edge:#F6F1F3;
+  transition:box-shadow .18s,outline-color .12s;
+}
+/* every zone shows it can take a card while dragging; the one under the pointer lights up */
+body.dragging .zone,body.dragging .tray{outline:2px dashed rgba(246,241,243,.34);outline-offset:4px}
+.zone.over,.tray.over{outline:3px solid var(--gold)!important;outline-offset:4px;box-shadow:0 0 0 9px rgba(240,188,24,.16),0 26px 60px rgba(0,0,0,.45)}
+.zone.over::after,.tray.over::after{content:'';position:absolute;inset:0;border-radius:inherit;background:rgba(255,255,255,.08);pointer-events:none}
+.tray{background:linear-gradient(180deg,#444747,var(--slate) 40%);border:1px solid var(--line);border-top:5px solid var(--gold);box-shadow:0 18px 40px rgba(0,0,0,.35);--edge:rgba(246,241,243,.45)}
+.zone{min-height:230px}
+.q1{background:var(--gold);color:#fff;--edge:#F0BC18}
+.q2{background:var(--plum);color:var(--paper);--edge:#C23A85}
+.q3{background:var(--slate);color:var(--paper);border:2px solid rgba(240,188,24,.55);--edge:#F6F1F3}
+.q4{background:rgba(35,31,32,.72);color:var(--paper);border:2px dashed rgba(246,241,243,.3);--card:#393C3C;--edge:#8E8588}
+.zhead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.zhead h2{margin:0;font-size:clamp(20px,1.8vw,25px);line-height:1.15;font-weight:700}
+.zhead p{margin:3px 0 0;font-size:14px;line-height:1.35;opacity:.8}
+.q1 .zhead h2,.q1 .zhead p,.q1 .count,.q1 .list:empty::before{color:#fff;text-shadow:0 1px 2px rgba(35,31,32,.6),0 0 1px rgba(35,31,32,.4)}
+.q1 .zhead p{opacity:1;font-weight:500}
+.q1 .list:empty::before{opacity:.9}
+.q1 .slot{background:rgba(35,31,32,.2)}
+.zhead .qsub{display:none;font-weight:700}
+.count{font-family:var(--display);font-size:38px;line-height:1}
+.list{position:relative;display:flex;flex-direction:column;gap:8px;flex:1}
+.list:empty::before{
+  content:attr(data-empty);display:grid;place-items:center;flex:1;min-height:90px;padding:14px;text-align:center;
+  font-size:14px;line-height:1.4;border:2px dashed currentColor;border-radius:14px;opacity:.5;
+}
+
+/* matrix grid with axis labels */
+.matrix{display:grid;grid-template-columns:28px minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto auto;gap:12px}
+.ax{display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--muted)}
+.ax.l{writing-mode:vertical-rl;transform:rotate(180deg)}
+.ax.t1{grid-column:2;grid-row:1}.ax.t2{grid-column:3;grid-row:1}
+.ax.l1{grid-column:1;grid-row:2}.ax.l2{grid-column:1;grid-row:3}
+.q1{grid-column:2;grid-row:2}.q2{grid-column:3;grid-row:2}.q3{grid-column:2;grid-row:3}.q4{grid-column:3;grid-row:3}
+@media (max-width:759px){
+  .matrix{grid-template-columns:minmax(0,1fr)}
+  .ax{display:none}
+  .q1,.q2,.q3,.q4{grid-column:1;grid-row:auto}
+  .zhead .qsub{display:block}
+  .zone{min-height:170px}
+}
+
+/* cards */
+.task{
+  position:relative;display:flex;align-items:flex-start;gap:6px;padding:9px 6px 9px 4px;
+  border-radius:12px;background:var(--card);color:var(--paper);
+  border:1px solid rgba(246,241,243,.14);border-left:5px solid var(--edge);
+  box-shadow:0 2px 0 rgba(0,0,0,.28);cursor:grab;-webkit-user-select:none;user-select:none;
+}
+.task:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.task.fresh{animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.9);opacity:0}to{transform:none;opacity:1}}
+.task.lifted{position:absolute;visibility:hidden;pointer-events:none;width:100%}
+.grip{flex:none;align-self:stretch;width:20px;display:grid;place-items:center;color:rgba(246,241,243,.45);touch-action:none;cursor:grab}
+.check{
+  flex:none;width:24px;height:24px;margin-top:1px;border-radius:50%;cursor:pointer;display:grid;place-items:center;
+  appearance:none;padding:0;background:transparent;border:2px solid rgba(246,241,243,.55);color:var(--ink);
+}
+.check svg{opacity:0}
+.done .check{background:var(--gold);border-color:var(--gold)}
+.done .check svg{opacity:1}
+.ttext{flex:1;min-width:0;padding-top:1px;font-size:16px;line-height:1.35;overflow-wrap:anywhere}
+.done .ttext{text-decoration:line-through;opacity:.55}
+.acts{flex:none;display:flex;gap:1px;opacity:0;transition:opacity .12s}
+.task:hover .acts,.task:focus-within .acts{opacity:1}
+@media (hover:none){.acts{opacity:1}}
+.ib{appearance:none;width:30px;height:30px;padding:0;border:0;border-radius:8px;background:transparent;color:rgba(246,241,243,.85);display:grid;place-items:center;cursor:pointer}
+.ib:hover{background:rgba(246,241,243,.14)}
+.edit{
+  flex:1;min-width:0;appearance:none;font:inherit;font-size:16px;color:var(--paper);
+  background:rgba(246,241,243,.1);border:2px solid var(--gold);border-radius:8px;padding:5px 8px;-webkit-user-select:text;user-select:text;
+}
+.edit:focus-visible{outline:none}
+.slot{border:2px dashed currentColor;border-radius:12px;opacity:.7;animation:slotin .16s ease-out}
+@keyframes slotin{from{opacity:0;transform:scaleY(.55)}to{opacity:.7;transform:none}}
+.dragcopy{position:fixed;left:0;top:0;z-index:100;pointer-events:none;will-change:transform;box-shadow:0 26px 50px rgba(0,0,0,.6),0 0 0 2px var(--ring,rgba(240,188,24,.7)),0 0 26px var(--glow,transparent);transition:box-shadow .18s,opacity .18s;border-radius:12px;cursor:grabbing}
+.dragcopy[data-over="q4"]{opacity:.8}
+.dragcopy .acts{opacity:0}
+.dragcopy::after{
+  content:attr(data-target);position:absolute;left:6px;top:calc(100% + 10px);padding:4px 12px;border-radius:999px;
+  background:var(--paper);color:var(--ink);font-weight:700;font-size:13px;line-height:1.3;white-space:nowrap;
+  box-shadow:0 6px 16px rgba(0,0,0,.4);pointer-events:none;
+}
+.dragcopy[data-target=""]::after{display:none}
+.task.landing{visibility:hidden}
+.task.landed{animation:land .42s cubic-bezier(.2,1.5,.4,1)}
+@keyframes land{
+  0%{transform:scale(1.07);box-shadow:0 0 0 0 rgba(240,188,24,.85),0 2px 0 rgba(0,0,0,.28)}
+  55%{box-shadow:0 0 0 14px rgba(240,188,24,0),0 2px 0 rgba(0,0,0,.28)}
+  100%{transform:none;box-shadow:0 0 0 0 rgba(240,188,24,0),0 2px 0 rgba(0,0,0,.28)}
+}
+.count.bump{animation:bump .34s cubic-bezier(.2,1.6,.4,1)}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.4)}100%{transform:scale(1)}}
+body.dragging,body.dragging *{cursor:grabbing!important;-webkit-user-select:none;user-select:none}
+
+/* menu + toast */
+.menu{position:fixed;z-index:90;min-width:220px;padding:6px;border-radius:14px;background:#2E3030;border:1px solid var(--line);box-shadow:0 18px 44px rgba(0,0,0,.55)}
+.menu button{
+  appearance:none;display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;border-radius:10px;
+  background:none;color:var(--paper);font:inherit;font-size:16px;text-align:left;cursor:pointer;
+}
+.menu button:hover:not([aria-current]){background:rgba(246,241,243,.1)}
+.menu button[aria-current]{opacity:.45;cursor:default}
+.menu .dot{width:14px;height:14px;border-radius:50%;flex:none;border:2px solid rgba(246,241,243,.5)}
+.toast{
+  position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:95;
+  display:flex;align-items:center;gap:16px;padding:12px 16px;border-radius:14px;background:var(--paper);color:var(--ink);
+  font-weight:700;box-shadow:0 14px 40px rgba(0,0,0,.5);max-width:calc(100vw - 24px);
+}
+.linkbtn{appearance:none;border:0;background:none;font:inherit;font-weight:700;color:var(--plum);text-decoration:underline;cursor:pointer;padding:4px}
+.help{margin:0;font-size:14px;line-height:1.5;color:var(--muted)}
+@media (hover:none){.help{display:none}}
+
+/* name + sync status (shown only when the sheet is connected) */
+.who{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.name-in{appearance:none;font:inherit;font-size:15px;color:var(--paper);background:rgba(35,31,32,.78);border:2px solid var(--line);border-radius:12px;padding:9px 12px;width:min(190px,42vw)}
+.name-in::placeholder{color:#9A9396}
+.name-in:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-color:var(--gold)}
+.sync{font-size:14px;color:var(--muted)}
+.top-actions{flex-wrap:wrap}
+.foot{margin:0;font-size:14px}
+.foot a{color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+.foot a:hover{color:var(--gold)}
+a.btn{text-decoration:none;display:inline-block}
+
+/* shared form bits */
+.field{display:grid;gap:6px;margin:0 0 14px;text-align:left;font-weight:700;font-size:15px;color:var(--muted)}
+.field input{appearance:none;font:inherit;font-size:19px;font-weight:500;color:var(--paper);background:rgba(35,31,32,.7);border:2px solid var(--line);border-radius:14px;padding:13px 14px;width:100%}
+.field input:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-color:var(--gold)}
+.err{margin:0 0 14px;color:var(--paper);background:rgba(145,25,90,.65);padding:10px 12px;border-radius:12px;font-size:15px;text-align:left}
+
+/* admin */
+.adm{max-width:1900px;margin:0 auto;padding:clamp(10px,2vw,24px)}
+.login{min-height:70vh;display:grid;place-items:center}
+.login-card{
+  width:min(460px,100%);padding:clamp(22px,4vw,32px);border-radius:24px;background:radial-gradient(520px 240px at 50% -25%,rgba(145,25,90,.9),transparent 70%),var(--slate);
+  border:1px solid var(--line);border-top:6px solid var(--gold);box-shadow:0 30px 80px rgba(0,0,0,.55);
+}
+.login-card h2{margin:0 0 8px;font-family:var(--display);font-weight:400;font-size:44px;line-height:1;letter-spacing:.02em;color:var(--gold);text-transform:uppercase}
+.login-card p{margin:0 0 18px;color:var(--muted);font-size:16px;line-height:1.5}
+.row{display:flex;flex-wrap:wrap;gap:10px}
+.adm-top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 20px;margin-bottom:clamp(12px,1.6vw,20px)}
+.adm-tools{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.adm-tools select{appearance:auto;font:inherit;font-size:15px;color:var(--paper);background:rgba(35,31,32,.85);border:2px solid var(--line);border-radius:12px;padding:9px 12px;max-width:220px}
+.adm-tools select:focus-visible,.chk input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.chk{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--muted);cursor:pointer}
+.chk input{width:18px;height:18px;accent-color:var(--gold)}
+.seg{display:inline-flex;border:2px solid var(--line);border-radius:12px;overflow:hidden}
+.seg button{appearance:none;border:0;background:rgba(35,31,32,.6);color:var(--paper);font:inherit;font-weight:700;font-size:15px;padding:9px 14px;cursor:pointer}
+.seg button+button{border-left:2px solid var(--line)}
+.seg button:hover{background:rgba(240,188,24,.2)}
+.seg button:focus-visible{outline:3px solid var(--gold);outline-offset:-3px}
+.adm-note{margin:0 0 14px;padding:10px 14px;border-radius:12px;background:rgba(240,188,24,.14);color:var(--gold);font-weight:700;font-size:15px}
+.adm-matrix{min-height:calc(100vh - 270px)}
+.adm-matrix .zone{min-height:calc((100vh - 290px)/2)}
+.adm-matrix .zhead h2{font-size:calc(clamp(22px,2vw,30px)*var(--s,1))}
+.adm-matrix .zhead p{font-size:calc(14px*var(--s,1))}
+.adm-matrix .count{font-size:calc(44px*var(--s,1))}
+.agrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(calc(210px*var(--s,1)),1fr));align-content:start;gap:calc(8px*var(--s,1))}
+.agrid:empty::before{grid-column:1/-1}
+.acard{background:var(--card);color:var(--paper);border:1px solid rgba(246,241,243,.14);border-left:5px solid var(--edge);border-radius:12px;padding:calc(10px*var(--s,1)) calc(12px*var(--s,1));box-shadow:0 2px 0 rgba(0,0,0,.28)}
+.atext{font-size:calc(16px*var(--s,1));line-height:1.3;overflow-wrap:anywhere}
+.aown{margin-top:calc(5px*var(--s,1));font-size:calc(12.5px*var(--s,1));font-weight:700;color:var(--muted)}
+.acard.done .atext{text-decoration:line-through;opacity:.55}
+.adm-tray{position:static;margin-top:clamp(12px,1.6vw,20px)}
+.adm-tray .list{max-height:none;overflow:visible}
+
+/* touch: bigger targets, no tap flash, long-press friendly */
+button{touch-action:manipulation}
+.task{touch-action:manipulation;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+.task.pressing{transform:scale(.97);transition:transform .12s}
+body.dragging{touch-action:none}
+@media (pointer:coarse){
+  .grip{width:30px}
+  .ib{width:36px;height:36px}
+  .check{width:28px;height:28px}
+  .zone.over,.tray.over{box-shadow:none}
+  .dragcopy{box-shadow:0 12px 20px rgba(0,0,0,.5),0 0 0 2px var(--ring,rgba(240,188,24,.75))}
+  .zone.over::after,.tray.over::after{display:none}
+}
+/* drop bar: appears at the bottom of the screen while dragging on a phone */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:80;display:none;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;
+  padding:26px 10px calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,rgba(35,31,32,0),rgba(35,31,32,.97) 34%);pointer-events:auto}
+body.dock-on .dock{display:grid}
+.dk{--c:#F6F1F3;--bg:#393C3C;min-height:66px;padding:6px 2px;border-radius:14px;background:rgba(35,31,32,.97);border:2px solid var(--c);color:#fff;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-weight:700;font-size:12.5px;line-height:1.15;text-align:center}
+.dk .dot{width:12px;height:12px;border-radius:50%;background:var(--c)}
+.dk.over{background:var(--bg);border-color:var(--gold);transform:scale(1.06);text-shadow:0 1px 2px rgba(35,31,32,.6)}
+.task.landed.fx-q4{animation:thud .44s cubic-bezier(.3,1.5,.5,1)}
+@keyframes thud{0%{transform:scale(1.1)}38%{transform:scale(1.05,.88)}68%{transform:scale(.97,1.05)}100%{transform:none}}
+/* intro page */
+.home{min-height:100vh;display:grid;place-items:center;padding:clamp(14px,3vw,32px)}
+.home-card{
+  width:min(740px,100%);text-align:center;padding:clamp(22px,4vw,42px);border-radius:28px;
+  background:radial-gradient(640px 260px at 50% -30%,rgba(145,25,90,.85),transparent 70%),var(--slate);
+  border:1px solid var(--line);border-top:6px solid var(--gold);box-shadow:0 30px 80px rgba(0,0,0,.55);
+}
+.logoplate{display:inline-block;background:#fff;border-radius:18px;padding:14px 26px;margin-bottom:24px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.logoplate img{display:block;width:min(280px,62vw);height:auto}
+.home h1{margin:0 0 10px;font-size:clamp(40px,8vw,68px)}
+.lead{margin:0 auto 28px;max-width:34ch;color:var(--muted);font-size:clamp(16px,2vw,19px);line-height:1.5}
+.roles{display:grid;gap:14px;grid-template-columns:1fr 1fr}
+@media (max-width:620px){.roles{grid-template-columns:1fr}}
+.role{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;text-decoration:none;padding:20px;min-height:128px;border-radius:20px;border:2px solid transparent;transition:transform .15s,filter .15s}
+.role strong{font-size:22px;line-height:1.2}
+.role span{font-size:15px;line-height:1.4}
+.role-p{background:var(--gold);color:var(--ink)}
+.role-p span{color:rgba(35,31,32,.82)}
+.role-t{background:var(--plum);color:var(--paper);border-color:rgba(246,241,243,.35)}
+.role-t span{color:rgba(246,241,243,.9)}
+.role:hover{transform:translateY(-3px);filter:brightness(1.06)}
+.role:focus-visible{outline:3px solid #fff;outline-offset:3px}
+
+/* session ended (participant) */
+.banner{margin:0;padding:12px 16px;border-radius:14px;background:var(--plum);color:var(--paper);font-weight:700;font-size:16px;line-height:1.4;border:1px solid rgba(246,241,243,.3)}
+body.ended .acts{display:none}
+body.ended .check{pointer-events:none;opacity:.7}
+body.ended .grip{visibility:hidden}
+body.ended .task{cursor:default}
+.addbar input:disabled,.addbar .btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* admin session bar + modal */
+.adm-sess{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:0 0 14px;padding:12px 16px;border-radius:16px;background:rgba(57,60,60,.8);border:1px solid var(--line)}
+.adm-sess .grow{flex:1}
+.adm-sess .sname{font-weight:700;font-size:18px}
+.adm-sess select{appearance:auto;font:inherit;font-size:15px;color:var(--paper);background:rgba(35,31,32,.85);border:2px solid var(--line);border-radius:12px;padding:9px 12px;max-width:min(360px,100%)}
+.adm-sess select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.adm-sess .btn{padding:10px 18px;font-size:16px}
+.pill{padding:5px 12px;border-radius:999px;font-weight:700;font-size:14px}
+.pill.open{background:var(--gold);color:var(--ink)}
+.pill.closed{background:var(--plum);color:var(--paper);border:1px solid rgba(246,241,243,.45)}
+.modal{position:fixed;inset:0;z-index:140;display:grid;place-items:center;padding:20px;background:rgba(35,31,32,.8);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.mcard{width:min(480px,100%);padding:clamp(20px,4vw,30px);border-radius:22px;background:var(--slate);border:1px solid var(--line);border-top:6px solid var(--gold);box-shadow:0 30px 80px rgba(0,0,0,.55)}
+.mcard h2{margin:0 0 10px;font-size:26px;line-height:1.2}
+.mcard p{margin:0 0 16px;color:var(--muted);line-height:1.5;font-size:16px}
+
+/* intro background: the matrix draws itself, then cards drop into their quadrants (one 20 second loop) */
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bgsvg{display:block;width:100%;height:100%}
+.home-card{position:relative;z-index:1}
+.bq{stroke:none}
+.bq1{fill:rgba(240,188,24,.10)}.bq2{fill:rgba(145,25,90,.30)}.bq3{fill:rgba(57,60,60,.55)}.bq4{fill:rgba(35,31,32,.35);stroke:rgba(246,241,243,.18);stroke-width:2;stroke-dasharray:8 8}
+.bax{stroke:rgba(240,188,24,.55);stroke-width:2.5;stroke-linecap:round;stroke-dasharray:1}
+.blab{fill:rgba(246,241,243,.62);font:700 15px 'DM Sans',system-ui,sans-serif}
+.bbody{fill:#231F20;stroke:rgba(246,241,243,.16);stroke-width:1}
+.bbar{fill:rgba(246,241,243,.28)}
+.bcard .bc,.bcard .bring{transform-box:fill-box;transform-origin:center}
+.bring{fill:none;stroke:var(--e);stroke-width:2.5}
+.bcard .bedge{fill:var(--e)}
+.bq,.bax,.blab,.bc,.bring{animation-duration:20s;animation-iteration-count:infinite;animation-fill-mode:both;animation-timing-function:cubic-bezier(.3,.7,.3,1)}
+.bq1{animation-name:bgq1}.bq2{animation-name:bgq2}.bq3{animation-name:bgq3}.bq4{animation-name:bgq4}
+.bax{animation-name:bgdraw}.blab{animation-name:bglab}
+.bfl{animation:bgfloat 5s ease-in-out infinite alternate}
+.bc0 .bc{animation-name:bgc0}.bc0 .bring{animation-name:bgr0}.bc0 .bfl{animation-delay:-0.0s}
+.bc1 .bc{animation-name:bgc1}.bc1 .bring{animation-name:bgr1}.bc1 .bfl{animation-delay:-0.7s}
+.bc2 .bc{animation-name:bgc2}.bc2 .bring{animation-name:bgr2}.bc2 .bfl{animation-delay:-1.4s}
+.bc3 .bc{animation-name:bgc3}.bc3 .bring{animation-name:bgr3}.bc3 .bfl{animation-delay:-2.0999999999999996s}
+.bc4 .bc{animation-name:bgc4}.bc4 .bring{animation-name:bgr4}.bc4 .bfl{animation-delay:-2.8s}
+.bc5 .bc{animation-name:bgc5}.bc5 .bring{animation-name:bgr5}.bc5 .bfl{animation-delay:-3.5s}
+.bc6 .bc{animation-name:bgc6}.bc6 .bring{animation-name:bgr6}.bc6 .bfl{animation-delay:-4.199999999999999s}
+.bc7 .bc{animation-name:bgc7}.bc7 .bring{animation-name:bgr7}.bc7 .bfl{animation-delay:-4.8999999999999995s}
+@keyframes bgdraw{0%,2%{opacity:0;stroke-dashoffset:1}3%{opacity:1}10%{opacity:1;stroke-dashoffset:0}80%{opacity:1;stroke-dashoffset:0}90%,100%{opacity:0;stroke-dashoffset:0}}
+@keyframes bgq1{0%,8%{opacity:0}13%{opacity:1}80%{opacity:1}90%,100%{opacity:0}}
+@keyframes bgq2{0%,10%{opacity:0}15%{opacity:1}80%{opacity:1}90%,100%{opacity:0}}
+@keyframes bgq3{0%,12%{opacity:0}17%{opacity:1}80%{opacity:1}90%,100%{opacity:0}}
+@keyframes bgq4{0%,14%{opacity:0}19%{opacity:1}80%{opacity:1}90%,100%{opacity:0}}
+@keyframes bglab{0%,16%{opacity:0}21%{opacity:1}80%{opacity:1}90%,100%{opacity:0}}
+@keyframes bgc0{0%,19%{opacity:0;transform:translateY(-46px) scale(.94)}21.25%{opacity:1}22.5%{transform:translateY(6px) scale(1.04)}23.5%{transform:translateY(0) scale(1)}80%{opacity:1;transform:none}90%,100%{opacity:0;transform:translateY(12px) scale(.98)}}
+@keyframes bgr0{0%,22.5%{opacity:0;transform:scale(1)}23%{opacity:.8}27%,100%{opacity:0;transform:scale(1.45)}}
+@keyframes bgc1{0%,31%{opacity:0;transform:translateY(-46px) scale(.94)}33.25%{opacity:1}34.5%{transform:translateY(6px) scale(1.04)}35.5%{transform:translateY(0) scale(1)}80%{opacity:1;transform:none}90%,100%{opacity:0;transform:translateY(12px) scale(.98)}}
+@keyframes bgr1{0%,34.5%{opacity:0;transform:scale(1)}35%{opacity:.8}39%,100%{opacity:0;transform:scale(1.45)}}
+@keyframes bgc2{0%,22%{opacity:0;transform:translateY(-46px) scale(.94)}24.25%{opacity:1}25.5%{transform:translateY(6px) scale(1.04)}26.5%{transform:translateY(0) scale(1)}80%{opacity:1;transform:none}90%,100%{opacity:0;transform:translateY(12px) scale(.98)}}
+@keyframes bgr2{0%,25.5%{opacity:0;transform:scale(1)}26%{opacity:.8}30%,100%{opacity:0;transform:scale(1.45)}}
+@keyframes bgc3{0%,34%{opacity:0;transform:translateY(-46px) scale(.94)}36.25%{opacity:1}37.5%{transform:translateY(6px) scale(1.04)}38.5%{transform:translateY(0) scale(1)}80%{opacity:1;transform:none}90%,100%{opacity:0;transform:translateY(12px) scale(.98)}}
+@keyframes bgr3{0%,37.5%{opacity:0;transform:scale(1)}38%{opacity:.8}42%,100%{opacity:0;transform:scale(1.45)}}
+@keyframes bgc4{0%,25%{opacity:0;transform:translateY(-46px) scale(.94)}27.25%{opacity:1}28.5%{transform:translateY(6px) scale(1.04)}29.5%{transform:translateY(0) scale(1)}80%{opacity:1;transform:none}90%,100%{opacity:0;transform:translateY(12px) scale(.98)}}
+@keyframes bgr4{0%,28.5%{opacity:0;transform:scale(1)}29%{opacity:.8}33%,100%{opacity:0;transform:scale(1.45)}}
+@keyframes bgc5{0%,37%{opacity:0;transform:translateY(-46px) scale(.94)}39.25%{opacity:1}40.5%{transform:translateY(6px) scale(1.04)}41.5%{transform:translateY(0) scale(1)}80%{opacity:1;transform:none}90%,100%{opacity:0;transform:translateY(12px) scale(.98)}}
+@keyframes bgr5{0%,40.5%{opacity:0;transform:scale(1)}41%{opacity:.8}45%,100%{opacity:0;transform:scale(1.45)}}
+@keyframes bgc6{0%,28%{opacity:0;transform:translateY(-46px) scale(.94)}30.25%{opacity:1}31.5%{transform:translateY(6px) scale(1.04)}32.5%{transform:translateY(0) scale(1)}80%{opacity:1;transform:none}90%,100%{opacity:0;transform:translateY(12px) scale(.98)}}
+@keyframes bgr6{0%,31.5%{opacity:0;transform:scale(1)}32%{opacity:.8}36%,100%{opacity:0;transform:scale(1.45)}}
+@keyframes bgc7{0%,40%{opacity:0;transform:translateY(-46px) scale(.94)}42.25%{opacity:1}43.5%{transform:translateY(6px) scale(1.04)}44.5%{transform:translateY(0) scale(1)}80%{opacity:1;transform:none}90%,100%{opacity:0;transform:translateY(12px) scale(.98)}}
+@keyframes bgr7{0%,43.5%{opacity:0;transform:scale(1)}44%{opacity:.8}48%,100%{opacity:0;transform:scale(1.45)}}
+@keyframes bgfloat{from{transform:translateY(0)}to{transform:translateY(-5px)}}
+#fxlayer{position:fixed;inset:0;pointer-events:none;z-index:120;overflow:hidden}
+.fx{position:absolute;left:0;top:0;will-change:transform,opacity}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (prefers-reduced-motion:reduce){.bring{display:none}}
+</style>
+</head>
+<body>
+<section class="home" id="home" aria-labelledby="homeTitle">
+<div class="bg" aria-hidden="true">
+  <svg class="bgsvg" focusable="false" aria-hidden="true">
+    <rect class="bq bq1" x="0" y="0" width="50%" height="50%"/><rect class="bq bq2" x="50%" y="0" width="50%" height="50%"/>
+    <rect class="bq bq3" x="0" y="50%" width="50%" height="50%"/><rect class="bq bq4" x="50%" y="50%" width="50%" height="50%"/>
+    <line class="bax" x1="50%" y1="50%" x2="50%" y2="0" pathLength="1"/><line class="bax" x1="50%" y1="50%" x2="50%" y2="100%" pathLength="1"/>
+    <line class="bax" x1="50%" y1="50%" x2="0" y2="50%" pathLength="1"/><line class="bax" x1="50%" y1="50%" x2="100%" y2="50%" pathLength="1"/>
+    <text class="blab" x="3%" y="6%">Do first</text><text class="blab" x="97%" y="6%" text-anchor="end">Schedule</text>
+    <text class="blab" x="3%" y="96%">Delegate</text><text class="blab" x="97%" y="96%" text-anchor="end">Eliminate</text>
+    <svg class="bcard bc0" x="4%" y="12%" width="170" height="46" overflow="visible" style="--e:#F0BC18"><rect class="bring" width="170" height="46" rx="12"/><g class="bfl"><g class="bc"><rect class="bbody" width="170" height="46" rx="12"/><rect class="bedge" width="7" height="46" rx="3"/><rect class="bbar" x="22" y="13" width="96" height="7" rx="3.5"/><rect class="bbar" x="22" y="27" width="58" height="7" rx="3.5"/></g></g></svg>
+    <svg class="bcard bc1" x="9%" y="31%" width="170" height="46" overflow="visible" style="--e:#F0BC18"><rect class="bring" width="170" height="46" rx="12"/><g class="bfl"><g class="bc"><rect class="bbody" width="170" height="46" rx="12"/><rect class="bedge" width="7" height="46" rx="3"/><rect class="bbar" x="22" y="13" width="118" height="7" rx="3.5"/><rect class="bbar" x="22" y="27" width="70" height="7" rx="3.5"/></g></g></svg>
+    <svg class="bcard bc2" x="83%" y="10%" width="170" height="46" overflow="visible" style="--e:#C23A85"><rect class="bring" width="170" height="46" rx="12"/><g class="bfl"><g class="bc"><rect class="bbody" width="170" height="46" rx="12"/><rect class="bedge" width="7" height="46" rx="3"/><rect class="bbar" x="22" y="13" width="84" height="7" rx="3.5"/><rect class="bbar" x="22" y="27" width="52" height="7" rx="3.5"/></g></g></svg>
+    <svg class="bcard bc3" x="78%" y="29%" width="170" height="46" overflow="visible" style="--e:#C23A85"><rect class="bring" width="170" height="46" rx="12"/><g class="bfl"><g class="bc"><rect class="bbody" width="170" height="46" rx="12"/><rect class="bedge" width="7" height="46" rx="3"/><rect class="bbar" x="22" y="13" width="104" height="7" rx="3.5"/><rect class="bbar" x="22" y="27" width="64" height="7" rx="3.5"/></g></g></svg>
+    <svg class="bcard bc4" x="5%" y="68%" width="170" height="46" overflow="visible" style="--e:#F6F1F3"><rect class="bring" width="170" height="46" rx="12"/><g class="bfl"><g class="bc"><rect class="bbody" width="170" height="46" rx="12"/><rect class="bedge" width="7" height="46" rx="3"/><rect class="bbar" x="22" y="13" width="112" height="7" rx="3.5"/><rect class="bbar" x="22" y="27" width="48" height="7" rx="3.5"/></g></g></svg>
+    <svg class="bcard bc5" x="10%" y="86%" width="170" height="46" overflow="visible" style="--e:#F6F1F3"><rect class="bring" width="170" height="46" rx="12"/><g class="bfl"><g class="bc"><rect class="bbody" width="170" height="46" rx="12"/><rect class="bedge" width="7" height="46" rx="3"/><rect class="bbar" x="22" y="13" width="76" height="7" rx="3.5"/><rect class="bbar" x="22" y="27" width="60" height="7" rx="3.5"/></g></g></svg>
+    <svg class="bcard bc6" x="82%" y="70%" width="170" height="46" overflow="visible" style="--e:#8E8588"><rect class="bring" width="170" height="46" rx="12"/><g class="bfl"><g class="bc"><rect class="bbody" width="170" height="46" rx="12"/><rect class="bedge" width="7" height="46" rx="3"/><rect class="bbar" x="22" y="13" width="98" height="7" rx="3.5"/><rect class="bbar" x="22" y="27" width="56" height="7" rx="3.5"/></g></g></svg>
+    <svg class="bcard bc7" x="77%" y="87%" width="170" height="46" overflow="visible" style="--e:#8E8588"><rect class="bring" width="170" height="46" rx="12"/><g class="bfl"><g class="bc"><rect class="bbody" width="170" height="46" rx="12"/><rect class="bedge" width="7" height="46" rx="3"/><rect class="bbar" x="22" y="13" width="90" height="7" rx="3.5"/><rect class="bbar" x="22" y="27" width="66" height="7" rx="3.5"/></g></g></svg>
+  </svg>
+</div>
+  <div class="home-card">
+    <div class="logoplate"><img src="data:image/png;base64,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" alt="HNI, Human Network International" width="280" height="99"></div>
+    <h1 id="homeTitle">Priority Matrix</h1>
+    <p class="lead">Sort your tasks by what is urgent and what is important.</p>
+    <div class="roles">
+      <a class="role role-p" href="#participant" id="goPart"><strong>I am a participant</strong><span>Add your tasks and sort them into the matrix.</span></a>
+      <a class="role role-t" href="#admin" id="goTrainer"><strong>I am the trainer</strong><span>See every card and run the session.</span></a>
+    </div>
+  </div>
+</section>
+
+<div class="app" id="app" hidden>
+  <header class="top">
+    <div>
+      <h1>Priority Matrix</h1>
+      <p class="sub">Type a task, press Enter, then drag its card into a quadrant.</p>
+    </div>
+    <div class="top-actions">
+      <div class="who" id="who" hidden>
+        <label class="sr" for="myName">Your name</label>
+        <input class="name-in" id="myName" type="text" maxlength="60" placeholder="Your name" autocomplete="name">
+        <span class="sync" id="syncStatus" role="status"></span>
+        <span class="sync" id="sessName"></span>
+      </div>
+      <span class="summary" id="summary"></span>
+      <button class="btn quiet" id="clearDone" type="button" hidden>Clear completed</button>
+    </div>
+  </header>
+
+  <p class="banner" id="sessBanner" role="status" hidden>The trainer has ended this session. Your matrix is saved and can no longer be changed.</p>
+
+  <div class="addbar">
+    <label class="sr" for="newTask">New task</label>
+    <input id="newTask" type="text" maxlength="140" placeholder="What needs doing?" autocomplete="off">
+    <button class="btn" id="add" type="button">Add task</button>
+  </div>
+
+  <main class="board" id="board">
+    <section class="tray" data-zone="tray" aria-labelledby="h-tray">
+      <div class="zhead">
+        <div><h2 id="h-tray">Unsorted</h2><p>New tasks wait here until you place them.</p></div>
+        <span class="count" data-count="tray" aria-hidden="true">0</span>
+      </div>
+      <div class="list" role="list" data-list="tray" data-empty="Type a task above. It lands here until you place it."></div>
+    </section>
+
+    <div class="matrix" id="matrix">
+      <span class="ax t1">Urgent</span><span class="ax t2">Not urgent</span>
+      <span class="ax l l1">Important</span><span class="ax l l2">Not important</span>
+    </div>
+  </main>
+
+  <p class="foot"><a href="#">Change role</a></p>
+</div>
+
+<div class="adm" id="adm" hidden>
+  <section class="login" id="admLogin">
+    <div class="login-card">
+      <h2>Admin</h2>
+      <p>Enter the admin password to see every card in one big matrix.</p>
+      <label class="field" for="admPw"><span>Password</span><input id="admPw" type="password" autocomplete="current-password"></label>
+      <p class="err" id="admErr" role="alert" hidden></p>
+      <div class="row">
+        <button class="btn" id="admGo" type="button">Open admin view</button>
+        <a class="btn quiet" href="#">Back</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="admMain" hidden>
+    <header class="adm-top">
+      <div>
+        <h1>Admin matrix</h1>
+        <p class="sub" id="admStatus" role="status"></p>
+      </div>
+      <div class="adm-tools">
+        <label class="sr" for="admPerson">Show cards from</label>
+        <select id="admPerson"><option value="">Everyone</option></select>
+        <label class="chk"><input type="checkbox" id="admDone" checked> Show completed</label>
+        <span class="seg" role="group" aria-label="Card size">
+          <button id="admSmaller" type="button" aria-label="Smaller cards">A&minus;</button>
+          <button id="admBigger" type="button" aria-label="Larger cards">A+</button>
+        </span>
+        <button class="btn quiet" id="admRefresh" type="button">Refresh</button>
+        <button class="btn quiet" id="admLock" type="button">Lock</button>
+      </div>
+    </header>
+    <div class="adm-sess" id="admSess">
+      <span class="pill open" id="admPill">Open</span>
+      <span class="sname" id="admSName"></span>
+      <label class="sr" for="admSessSel">View session</label>
+      <select id="admSessSel"></select>
+      <span class="grow"></span>
+      <button class="btn quiet" id="admEnd" type="button">End session</button>
+      <button class="btn quiet" id="admReopen" type="button" hidden>Reopen session</button>
+      <button class="btn" id="admNew" type="button">Start new session</button>
+    </div>
+    <p class="adm-note" id="admNote" hidden></p>
+    <p class="adm-note" id="admPast" hidden></p>
+    <div class="matrix adm-matrix" id="admMatrix">
+      <span class="ax t1">Urgent</span><span class="ax t2">Not urgent</span>
+      <span class="ax l l1">Important</span><span class="ax l l2">Not important</span>
+    </div>
+    <section class="tray adm-tray" aria-labelledby="ah-tray">
+      <div class="zhead">
+        <div><h2 id="ah-tray">Not placed yet</h2><p>Cards that are still unsorted.</p></div>
+        <span class="count" id="admTrayCount" aria-hidden="true">0</span>
+      </div>
+      <div class="list agrid" id="admTrayList" data-empty="Nothing waiting. Every card has been placed."></div>
+    </section>
+  </section>
+</div>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle" hidden>
+  <div class="mcard">
+    <h2 id="mTitle"></h2>
+    <p id="mText"></p>
+    <label class="field" id="mField" for="mInput" hidden><span id="mLabel"></span><input id="mInput" type="text" maxlength="60" autocomplete="off"></label>
+    <div class="row"><button class="btn" id="mOk" type="button"></button><button class="btn quiet" id="mCancel" type="button">Cancel</button></div>
+  </div>
+</div>
+
+<div class="menu" id="menu" role="menu" aria-label="Move task to" hidden></div>
+<div class="toast" id="toast" role="status" hidden><span id="toastMsg"></span><button class="linkbtn" id="undo" type="button">Undo</button></div>
+<div class="dock" id="dock" aria-hidden="true"></div>
+<div class="sr" id="live" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+
+const ZONES = [
+  { id: 'q1', name: 'Do first',   sub: 'Urgent and important',       desc: 'Do these today.',          dot: '#F0BC18' },
+  { id: 'q2', name: 'Schedule',   sub: 'Important, not urgent',      desc: 'Plan a time for these.',   dot: '#C23A85' },
+  { id: 'q3', name: 'Delegate',   sub: 'Urgent, not important',      desc: 'Hand these to someone.',   dot: '#F6F1F3' },
+  { id: 'q4', name: 'Eliminate',  sub: 'Not urgent, not important',  desc: 'Drop or park these.',      dot: '#8E8588' }
+];
+const TRAY = { id: 'tray', name: 'Unsorted', menuName: 'Back to unsorted', dot: 'transparent' };
+const ALL = [TRAY].concat(ZONES);
+const KEY = 'priority-matrix-v1';
+
+/* ---------------------------------------------------------------------
+   SHARING SETUP (optional)
+   Paste your Google Apps Script web app URL between the quotes so every
+   participant's cards reach the admin view. Leave it empty and the page
+   works on its own: cards stay in this browser and the admin view shows
+   this browser's cards only.
+   --------------------------------------------------------------------- */
+const SYNC_URL = 'https://script.google.com/macros/s/AKfycbwCrC7zxR3nOMa6QqN8pnmcyTtmvv7bNzfbBNVeHjcQx6M7bJMyP2NMcVYv0im9871n/exec';
+const SYNC_ON = !!SYNC_URL;
+const ADMIN_HASH = 'b79ea17b7c5ca8fe9cccd8cdba6e8f8ed0b3c948f9f709ed0f47d2fd47fcba82';   // used only when no sheet is connected
+
+const ICON = {
+  grip: '<svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor" aria-hidden="true"><circle cx="2.2" cy="3" r="1.5"/><circle cx="7.8" cy="3" r="1.5"/><circle cx="2.2" cy="8" r="1.5"/><circle cx="7.8" cy="8" r="1.5"/><circle cx="2.2" cy="13" r="1.5"/><circle cx="7.8" cy="13" r="1.5"/></svg>',
+  check: '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  move: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.5v13M1.5 8h13M8 1.5L6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2"/></svg>',
+  edit: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 14l.8-3.4L11 2.4a1.4 1.4 0 012 0l.6.6a1.4 1.4 0 010 2L5.4 13.2 2 14z"/><path d="M9.6 3.8l2.6 2.6"/></svg>',
+  del: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg>'
+};
+
+const $ = (id) => document.getElementById(id);
+const board = $('board'), matrix = $('matrix'), menu = $('menu'), toast = $('toast');
+const input = $('newTask');
+
+/* ---------- state ---------- */
+let tasks = load();
+let editingId = null, focusId = null, freshId = null, menuFor = null, lastRemoved = null, toastTimer = null, rendered = false;
+const zoneEls = {};
+
+function load() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(KEY) || '[]');
+    if (!Array.isArray(raw)) return [];
+    return raw.filter(t => t && typeof t.id === 'string' && typeof t.text === 'string' && ALL.some(z => z.id === t.zone))
+              .map(t => ({ id: t.id, text: t.text.slice(0, 140), zone: t.zone, done: !!t.done }));
+  } catch (e) { return []; }
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(tasks)); } catch (e) { /* storage unavailable */ } scheduleSync(); }
+const uid = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
+const zoneOf = (id) => ALL.find(z => z.id === id);
+const announce = (msg) => { $('live').textContent = ''; setTimeout(() => { $('live').textContent = msg; }, 30); };
+
+/* ---------- build zones ---------- */
+zoneEls.tray = { root: board.querySelector('.tray'), list: board.querySelector('[data-list="tray"]'), count: board.querySelector('[data-count="tray"]') };
+ZONES.forEach(z => {
+  const sec = document.createElement('section');
+  sec.className = 'zone ' + z.id; sec.dataset.zone = z.id; sec.setAttribute('aria-labelledby', 'h-' + z.id);
+  sec.innerHTML = '<div class="zhead"><div><h2 id="h-' + z.id + '"></h2><p class="qsub"></p><p class="qdesc"></p></div><span class="count" aria-hidden="true">0</span></div>' +
+                  '<div class="list" role="list"></div>';
+  sec.querySelector('h2').textContent = z.name;
+  sec.querySelector('.qsub').textContent = z.sub;
+  sec.querySelector('.qdesc').textContent = z.desc;
+  const list = sec.querySelector('.list'); list.dataset.empty = 'Drop a task here';
+  matrix.appendChild(sec);
+  zoneEls[z.id] = { root: sec, list, count: sec.querySelector('.count') };
+});
+
+/* ---------- rendering ---------- */
+function iconBtn(act, label, svg, cls) {
+  const b = document.createElement('button');
+  b.type = 'button'; b.dataset.act = act; b.className = cls; b.setAttribute('aria-label', label); b.innerHTML = svg;
+  return b;
+}
+function cardEl(t) {
+  const c = document.createElement('div');
+  c.className = 'task' + (t.done ? ' done' : '') + (t.id === freshId ? ' fresh' : '');
+  c.dataset.id = t.id; c.tabIndex = 0; c.setAttribute('role', 'listitem');
+  const grip = document.createElement('span'); grip.className = 'grip'; grip.innerHTML = ICON.grip;
+  const chk = iconBtn('check', (t.done ? 'Mark as not done: ' : 'Mark as done: ') + t.text, ICON.check, 'check');
+  chk.setAttribute('aria-pressed', String(t.done));
+  c.append(grip, chk);
+  if (t.id === editingId) {
+    const inp = document.createElement('input');
+    inp.className = 'edit'; inp.type = 'text'; inp.maxLength = 140; inp.value = t.text; inp.setAttribute('aria-label', 'Edit task');
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); commitEdit(t.id, inp.value); }
+      else if (e.key === 'Escape') { e.preventDefault(); editingId = null; focusId = t.id; render(); }
+    });
+    inp.addEventListener('blur', () => { if (editingId === t.id) commitEdit(t.id, inp.value); });
+    c.append(inp);
+  } else {
+    const tx = document.createElement('span'); tx.className = 'ttext'; tx.textContent = t.text;
+    const acts = document.createElement('span'); acts.className = 'acts';
+    acts.append(iconBtn('move', 'Move task: ' + t.text, ICON.move, 'ib'), iconBtn('edit', 'Edit task: ' + t.text, ICON.edit, 'ib'), iconBtn('del', 'Delete task: ' + t.text, ICON.del, 'ib'));
+    c.append(tx, acts);
+  }
+  return c;
+}
+function render() {
+  hideMenu();
+  ALL.forEach(z => {
+    const els = zoneEls[z.id], mine = tasks.filter(t => t.zone === z.id);
+    els.list.replaceChildren(...mine.map(cardEl));
+    const n = String(mine.filter(t => !t.done).length);
+    if (rendered && els.count.textContent !== n) { els.count.classList.remove('bump'); void els.count.offsetWidth; els.count.classList.add('bump'); }
+    els.count.textContent = n;
+  });
+  const done = tasks.filter(t => t.done).length, open = tasks.length - done;
+  $('summary').textContent = tasks.length ? open + ' open' + (done ? ', ' + done + ' done' : '') : 'No tasks yet';
+  $('clearDone').hidden = done === 0;
+  const editInp = board.querySelector('.edit');
+  if (editInp) { editInp.focus(); editInp.select(); }
+  else if (focusId) {
+    const c = board.querySelector('.task[data-id="' + focusId + '"]');
+    if (c) { c.focus({ preventScroll: true }); c.scrollIntoView({ block: 'nearest' }); }
+  }
+  focusId = null; freshId = null; rendered = true;
+}
+function commit() { save(); render(); }
+
+/* ---------- actions ---------- */
+function addTask() {
+  if (isLocked()) return;
+  const text = input.value.trim().slice(0, 140);
+  if (!text) { input.focus(); return; }
+  const t = { id: uid(), text, zone: 'tray', done: false };
+  tasks.unshift(t); freshId = t.id; input.value = '';
+  commit(); input.focus();
+  announce('Task added to Unsorted.');
+}
+function moveTask(id, zoneId) {
+  if (isLocked()) return;
+  const i = tasks.findIndex(t => t.id === id); if (i < 0) return;
+  const t = tasks[i]; if (t.zone === zoneId) { focusId = id; render(); return; }
+  tasks.splice(i, 1); t.zone = zoneId; tasks.push(t); focusId = id;
+  commit();
+  playMoveFx(id, zoneId);
+  announce('Moved to ' + zoneOf(zoneId).name + '.');
+}
+function toggleDone(id) { if (isLocked()) return; const t = tasks.find(x => x.id === id); if (!t) return; t.done = !t.done; focusId = id; commit(); }
+function startEdit(id) { if (isLocked()) return; editingId = id; render(); }
+function commitEdit(id, val) {
+  const t = tasks.find(x => x.id === id); editingId = null; focusId = id;
+  val = val.trim(); if (t && val) t.text = val.slice(0, 140);
+  commit();
+}
+function removeTask(id) {
+  if (isLocked()) return;
+  const i = tasks.findIndex(t => t.id === id); if (i < 0) return;
+  lastRemoved = [{ task: tasks[i], index: i }];
+  tasks.splice(i, 1); commit(); showToast('Task deleted.');
+}
+function clearDone() {
+  if (isLocked()) return;
+  const items = [];
+  tasks.forEach((t, i) => { if (t.done) items.push({ task: t, index: i }); });
+  if (!items.length) return;
+  lastRemoved = items; tasks = tasks.filter(t => !t.done); commit();
+  showToast(items.length + (items.length === 1 ? ' completed task cleared.' : ' completed tasks cleared.'));
+}
+function undo() {
+  if (!lastRemoved) return;
+  lastRemoved.sort((a, b) => a.index - b.index).forEach(r => tasks.splice(Math.min(r.index, tasks.length), 0, r.task));
+  lastRemoved = null; hideToast(); commit();
+}
+function showToast(msg, undoable) {
+  $('toastMsg').textContent = msg; $('undo').hidden = undoable === false; toast.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(hideToast, 6000);
+}
+function hideToast() { toast.hidden = true; clearTimeout(toastTimer); }
+
+/* ---------- move menu ---------- */
+function showMenu(anchor, id) {
+  if (isLocked()) return;
+  const t = tasks.find(x => x.id === id); if (!t) return;
+  if (!menu.hidden && menuFor === id) { hideMenu(); return; }
+  menuFor = id; menu.innerHTML = '';
+  ALL.forEach(z => {
+    const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'menuitem'); b.dataset.zone = z.id;
+    const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = z.dot;
+    const lab = document.createElement('span'); lab.textContent = z.menuName || z.name;
+    b.append(dot, lab);
+    if (z.id === t.zone) b.setAttribute('aria-current', 'true');
+    menu.appendChild(b);
+  });
+  menu.hidden = false;
+  const r = anchor.getBoundingClientRect(), mw = menu.offsetWidth, mh = menu.offsetHeight;
+  let left = Math.max(8, Math.min(r.right - mw, window.innerWidth - mw - 8));
+  let top = r.bottom + 6; if (top + mh > window.innerHeight - 8) top = Math.max(8, r.top - mh - 6);
+  menu.style.left = left + 'px'; menu.style.top = top + 'px';
+  const first = menu.querySelector('button:not([aria-current])'); if (first) first.focus();
+}
+function hideMenu() { if (!menu.hidden) { menu.hidden = true; menuFor = null; } }
+menu.addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-zone]'); if (!b || b.hasAttribute('aria-current')) return;
+  const id = menuFor; hideMenu(); moveTask(id, b.dataset.zone);
+});
+menu.addEventListener('keydown', (e) => {
+  const items = [...menu.querySelectorAll('button:not([aria-current])')], i = items.indexOf(document.activeElement);
+  if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus(); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+  else if (e.key === 'Escape') { e.preventDefault(); const id = menuFor; hideMenu(); focusId = id; render(); }
+});
+document.addEventListener('pointerdown', (e) => {
+  if (!menu.hidden && !menu.contains(e.target) && !e.target.closest('[data-act="move"]')) hideMenu();
+});
+
+/* ---------- click + keyboard on cards ---------- */
+board.addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  const card = b.closest('.task'), id = card.dataset.id;
+  const act = b.dataset.act;
+  if (act === 'check') toggleDone(id);
+  else if (act === 'move') showMenu(b, id);
+  else if (act === 'edit') startEdit(id);
+  else if (act === 'del') removeTask(id);
+});
+board.addEventListener('dblclick', (e) => {
+  const tx = e.target.closest('.ttext'); if (tx) startEdit(tx.closest('.task').dataset.id);
+});
+board.addEventListener('keydown', (e) => {
+  if (isLocked()) return;
+  const card = e.target.closest('.task');
+  if (!card || e.target !== card) return;
+  const id = card.dataset.id;
+  if (e.key >= '1' && e.key <= '4') { e.preventDefault(); moveTask(id, 'q' + e.key); }
+  else if (e.key === '0') { e.preventDefault(); moveTask(id, 'tray'); }
+  else if (e.key === ' ') { e.preventDefault(); toggleDone(id); }
+  else if (e.key === 'Enter' || e.key === 'F2') { e.preventDefault(); startEdit(id); }
+  else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); removeTask(id); }
+});
+
+/* ---------- landing effects: every quadrant has its own little reaction ---------- */
+const fxLayer = document.createElement('div'); fxLayer.id = 'fxlayer'; fxLayer.setAttribute('aria-hidden', 'true'); document.body.appendChild(fxLayer);
+const RINGS = {
+  q1: ['#F0BC18', 'rgba(240,188,24,.55)'], q2: ['#C23A85', 'rgba(194,58,133,.5)'],
+  q3: ['#F6F1F3', 'rgba(246,241,243,.3)'], q4: ['#8E8588', 'transparent'], tray: ['#F6F1F3', 'transparent']
+};
+function fxEl(css) { const i = document.createElement('i'); i.className = 'fx'; Object.assign(i.style, css); fxLayer.appendChild(i); return i; }
+function play(el, frames, opts) {
+  if (!el.animate) { el.remove(); return; }
+  const a = el.animate(frames, Object.assign({ fill: 'forwards' }, opts));
+  a.onfinish = () => el.remove();
+  setTimeout(() => el.remove(), (opts.duration || 600) + (opts.delay || 0) + 300);
+}
+function ringFx(cx, cy, color, delay, grow) {
+  const e = fxEl({ width: '24px', height: '24px', marginLeft: '-12px', marginTop: '-12px', border: '3px solid ' + color, borderRadius: '50%' });
+  play(e, [{ transform: 'translate(' + cx + 'px,' + cy + 'px) scale(.4)', opacity: .95 }, { transform: 'translate(' + cx + 'px,' + cy + 'px) scale(' + grow + ')', opacity: 0 }],
+       { duration: 640, delay, easing: 'cubic-bezier(.2,.7,.2,1)' });
+}
+/* r is the rectangle where the card landed */
+function celebrate(zid, r) {
+  if (RM) return;
+  const cx = r.left + r.width / 2, cy = r.top + r.height / 2, grow = clamp(r.width / 30, 3, 9), rnd = Math.random;
+  if (zid === 'q1') {                         // Do first: a burst of gold sparks
+    ringFx(cx, cy, '#F0BC18', 0, grow);
+    const cols = ['#F0BC18', '#FFE27A', '#F6F1F3'];
+    for (let i = 0; i < 14; i++) {
+      const a = (i / 14) * Math.PI * 2 + rnd() * .3, dist = r.width * .32 + rnd() * 50, sz = 5 + rnd() * 5;
+      const e = fxEl({ width: sz + 'px', height: sz + 'px', marginLeft: -sz / 2 + 'px', marginTop: -sz / 2 + 'px', background: cols[i % 3], borderRadius: '2px' });
+      play(e, [{ transform: 'translate(' + cx + 'px,' + cy + 'px) rotate(0deg) scale(1)', opacity: 1 },
+               { transform: 'translate(' + (cx + Math.cos(a) * dist) + 'px,' + (cy + Math.sin(a) * dist) + 'px) rotate(' + rnd() * 360 + 'deg) scale(0)', opacity: 0 }],
+           { duration: 520 + rnd() * 260, easing: 'cubic-bezier(.15,.8,.3,1)' });
+    }
+  } else if (zid === 'q2') {                  // Schedule: two calm ripples
+    ringFx(cx, cy, '#C23A85', 0, grow); ringFx(cx, cy, '#F6F1F3', 140, grow * .8);
+  } else if (zid === 'q3') {                  // Delegate: speed lines, the card is handed over
+    for (let i = 0; i < 7; i++) {
+      const dy = (i - 3) * 7 + (rnd() * 4 - 2), len = 22 + rnd() * 26;
+      const e = fxEl({ width: len + 'px', height: '3px', marginTop: '-1.5px', background: '#F6F1F3', borderRadius: '2px', transformOrigin: '0 50%' });
+      play(e, [{ transform: 'translate(' + (cx - r.width * .1) + 'px,' + (cy + dy) + 'px) scaleX(1)', opacity: .9 },
+               { transform: 'translate(' + (cx + r.width * .45 + rnd() * 40) + 'px,' + (cy + dy) + 'px) scaleX(.2)', opacity: 0 }],
+           { duration: 420 + rnd() * 200, delay: i * 18, easing: 'cubic-bezier(.2,.7,.2,1)' });
+    }
+  } else if (zid === 'q4') {                  // Eliminate: a puff of dust
+    for (let i = 0; i < 9; i++) {
+      const sz = 10 + rnd() * 10, a = -Math.PI / 2 + (rnd() - .5) * 2.4, dist = 24 + rnd() * 44;
+      const e = fxEl({ width: sz + 'px', height: sz + 'px', marginLeft: -sz / 2 + 'px', marginTop: -sz / 2 + 'px', background: i % 2 ? '#C9C1C5' : '#8E8588', borderRadius: '50%' });
+      play(e, [{ transform: 'translate(' + (cx + (rnd() - .5) * r.width * .6) + 'px,' + cy + 'px) scale(.5)', opacity: .55 },
+               { transform: 'translate(' + (cx + Math.cos(a) * dist) + 'px,' + (cy + Math.sin(a) * dist) + 'px) scale(1.9)', opacity: 0 }],
+           { duration: 620 + rnd() * 260, easing: 'cubic-bezier(.2,.6,.3,1)' });
+    }
+  } else {
+    ringFx(cx, cy, '#F6F1F3', 0, grow * .7);
+  }
+}
+/* the same effect when a card is moved with the menu or the keyboard */
+function playMoveFx(id, zid) {
+  requestAnimationFrame(() => {
+    const c = board.querySelector('.task[data-id="' + id + '"]'); if (!c) return;
+    const r = c.getBoundingClientRect(); if (r.bottom < 0 || r.top > window.innerHeight) return;
+    c.classList.add('landed', 'fx-' + zid); celebrate(zid, r);
+    setTimeout(() => c.classList.remove('landed', 'fx-' + zid), 460);
+  });
+}
+
+/* ---------- drag and drop (pointer events: mouse, pen and touch) ---------- */
+const RM = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const buzz = (ms) => { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* not supported */ } };
+const HOLD_MS = 220, HOLD_SLOP = 8, TOUCH_LIFT = 58;
+let drag = null;
+
+/* phone drop bar: one big target per quadrant, always on screen while dragging */
+const dockEls = [];
+(function buildDock() {
+  const colors = { q1: ['#F0BC18', '#F0BC18'], q2: ['#C23A85', '#91195A'], q3: ['#F6F1F3', '#393C3C'], q4: ['#8E8588', '#393C3C'], tray: ['#F6F1F3', '#393C3C'] };
+  ZONES.concat([TRAY]).forEach(z => {
+    const d = document.createElement('div');
+    d.className = 'dk'; d.dataset.zone = z.id;
+    d.style.setProperty('--c', colors[z.id][0]); d.style.setProperty('--bg', colors[z.id][1]);
+    const dot = document.createElement('i'); dot.className = 'dot';
+    const t = document.createElement('span'); t.textContent = z.id === 'tray' ? 'Unsorted' : z.name;
+    d.append(dot, t); $('dock').appendChild(d); dockEls.push(d);
+  });
+})();
+
+board.addEventListener('pointerdown', (e) => {
+  if (isLocked() || drag || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  const card = e.target.closest('.task'); if (!card) return;
+  if (e.target.closest('button, input')) return;
+  const touch = e.pointerType === 'touch', onGrip = !!e.target.closest('.grip');
+  const d = drag = {
+    card, id: card.dataset.id, pid: e.pointerId, ptype: e.pointerType,
+    sx: e.clientX, sy: e.clientY, x: e.clientX, y: e.clientY,
+    started: false, zone: null, dirty: false, timer: null,
+    hold: touch && !onGrip,                // on touch, pressing the card body and holding picks it up; a quick swipe still scrolls
+    lift: touch ? TOUCH_LIFT : 0           // the card floats above the finger so it stays visible
+  };
+  if (d.hold) {
+    d.pressT = setTimeout(() => { if (drag === d && !d.started) card.classList.add('pressing'); }, 90);   // shows the press is registering
+    d.timer = setTimeout(() => { if (drag === d && !d.started) { d.sx = d.x; d.sy = d.y; startDrag(); } }, HOLD_MS);
+  }
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointercancel', onCancel);
+});
+/* once a card is picked up, the page must not scroll under the finger */
+document.addEventListener('touchmove', (e) => { if (drag && drag.started && e.cancelable) e.preventDefault(); }, { passive: false });
+board.addEventListener('contextmenu', (e) => { if (drag) e.preventDefault(); });
+
+/* neighbours glide into their new places instead of jumping */
+function flip(mutate) {
+  const els = [...board.querySelectorAll('.task:not(.lifted)')];
+  const before = new Map(els.map(el => [el, el.getBoundingClientRect().top]));   // where each card is on screen right now
+  mutate();
+  if (RM) return;
+  els.forEach(el => { el.style.transition = 'none'; el.style.transform = ''; });   // measure the true new layout
+  const moved = [];
+  els.forEach(el => {
+    const dy = before.get(el) - el.getBoundingClientRect().top;
+    if (Math.abs(dy) >= 1) { el.style.transform = 'translateY(' + dy + 'px)'; moved.push(el); }
+    else el.style.transition = '';
+  });
+  if (!moved.length) return;
+  void board.offsetWidth;
+  moved.forEach(el => {
+    el.style.transition = 'transform .2s cubic-bezier(.2,.8,.2,1)'; el.style.transform = '';
+    clearTimeout(el._ft); el._ft = setTimeout(() => { el.style.transition = ''; }, 240);
+  });
+}
+
+function applyGhost() {
+  const d = drag;
+  d.ghost.style.transform = 'translate3d(' + (d.cx - d.offX) + 'px,' + (d.cy - d.offY) + 'px,0) rotate(' + (RM ? 0 : d.ang) + 'deg) scale(' + (RM ? 1 : d.sc) + ')';
+}
+/* where the card "is" for drop purposes: the pointer for a mouse, the middle of the floating card for a finger */
+function hitPoint() {
+  const d = drag;
+  if (d.ptype !== 'touch') return { x: d.x, y: d.y };
+  return { x: d.x - d.offX + d.w / 2, y: d.y - d.lift - d.offY + d.h / 2 };
+}
+function startDrag() {
+  const d = drag;
+  clearTimeout(d.pressT); d.card.classList.remove('pressing');
+  const r = d.card.getBoundingClientRect();
+  d.w = r.width; d.h = r.height;
+  d.offX = d.sx - r.left; d.offY = d.sy - r.top;
+  const g = d.card.cloneNode(true);
+  g.classList.add('dragcopy'); g.removeAttribute('tabindex'); g.dataset.target = '';
+  g.style.width = r.width + 'px'; g.style.transformOrigin = d.offX + 'px ' + d.offY + 'px';
+  document.body.appendChild(g); d.ghost = g;
+  const slot = document.createElement('div'); slot.className = 'slot'; slot.style.height = r.height + 'px';
+  d.card.parentNode.insertBefore(slot, d.card); d.slot = slot;
+  setTimeout(() => { slot.style.animation = 'none'; }, 220);   // the pop-in plays once, not every time the gap moves
+  d.card.classList.add('lifted');
+  document.body.classList.add('dragging');
+  d.dockH = 0;
+  if (d.ptype === 'touch' && window.innerWidth < 760) { document.body.classList.add('dock-on'); d.dockH = $('dock').offsetHeight; }
+  hideMenu(); d.started = true;
+  d.cx = d.x; d.cy = d.y; d.ang = 0; d.sc = 1; d.t0 = performance.now(); d.dirty = true;
+  applyGhost();
+  if (d.ptype === 'touch') buzz(12);
+  requestAnimationFrame(frameLoop);
+}
+function updateTarget() {
+  const d = drag;
+  let zone = null, fromDock = false;
+  if (d.ptype === 'touch') {                       // the bottom bar is aimed at with the finger itself
+    const f = document.elementFromPoint(d.x, d.y);
+    const dk = f && f.closest ? f.closest('.dk') : null;
+    if (dk) { zone = dk; fromDock = true; }
+  }
+  const hp = hitPoint();
+  if (!zone) {
+    const el = document.elementFromPoint(hp.x, hp.y);
+    zone = el && el.closest ? el.closest('[data-zone]:not(.dk)') : null;
+  }
+  const zid = zone ? zone.dataset.zone : null;
+  ALL.forEach(z => zoneEls[z.id].root.classList.toggle('over', z.id === zid && !fromDock));
+  dockEls.forEach(x => x.classList.toggle('over', fromDock && x.dataset.zone === zid));
+  if (d.ptype === 'touch' && zid !== d.zid && zid) buzz(5);   // a tick each time you enter a new quadrant
+  d.zone = zone; d.zid = zid; d.fromDock = fromDock;
+  d.ghost.dataset.target = zone ? (zid === 'tray' ? 'Back to unsorted' : 'Drop in ' + zoneOf(zid).name) : '';
+  const rg = RINGS[zid] || ['rgba(240,188,24,.7)', 'transparent'];
+  d.ghost.style.setProperty('--ring', rg[0]); d.ghost.style.setProperty('--glow', rg[1]); d.ghost.dataset.over = zid || '';
+  if (!zone) return;
+  const list = zoneEls[zid].list;
+  let ref = null;
+  if (!fromDock) {
+    // compare against layout positions (not on-screen ones) so cards that are mid-glide cannot make the gap flicker
+    const top = list.getBoundingClientRect().top - list.scrollTop;
+    for (const n of list.children) {
+      if (!n.classList.contains('task') || n.classList.contains('lifted')) continue;
+      if (hp.y < top + n.offsetTop + n.offsetHeight / 2) { ref = n; break; }
+    }
+  }
+  if (d.slot.parentNode !== list || d.slot.nextSibling !== ref) flip(() => list.insertBefore(d.slot, ref));
+}
+function onMove(e) {
+  if (!drag || e.pointerId !== drag.pid) return;
+  drag.x = e.clientX; drag.y = e.clientY;
+  if (!drag.started) {
+    const m = Math.hypot(drag.x - drag.sx, drag.y - drag.sy);
+    if (drag.hold) { if (m > HOLD_SLOP) endDrag(false); return; }   // finger moved before the hold: it is a scroll
+    if (m < 6) return;
+    startDrag();
+  }
+  drag.dirty = true;
+}
+/* one loop: the card follows the finger, swings with its speed, the drop target updates once per frame, and the page scrolls near the edges */
+function frameLoop(now) {
+  const d = drag; if (!d || !d.started) return;
+  const dt = Math.min(0.05, (now - d.t0) / 1000) || 0.016; d.t0 = now;
+  const px = d.cx;
+  const k = RM ? 1 : 1 - Math.exp(-(d.ptype === 'touch' ? 60 : 38) * dt);
+  d.cx += (d.x - d.cx) * k; d.cy += ((d.y - d.lift) - d.cy) * k;
+  d.ang += (clamp((d.cx - px) * 1.3, -12, 12) - d.ang) * (1 - Math.exp(-14 * dt));
+  d.sc += (1.06 - d.sc) * (1 - Math.exp(-16 * dt));
+  applyGhost();
+  if (!d.fromDock) {
+    const hp = hitPoint(), h = window.innerHeight, edge = 90, bottom = h - d.dockH - edge * (d.dockH ? 0.4 : 1);
+    const speed = (f) => Math.max(1, Math.round(Math.pow(clamp(f, 0, 1.4), 2) * 1100 * dt));   // pixels per frame, same speed on 60 and 120 Hz screens
+    let dy = 0;
+    if (hp.y < edge) dy = -speed((edge - hp.y) / edge);
+    else if (hp.y > bottom) dy = speed((hp.y - bottom) / edge);
+    if (dy) { window.scrollBy(0, dy); d.dirty = true; }
+  }
+  if (d.dirty) { d.dirty = false; updateTarget(); }
+  requestAnimationFrame(frameLoop);
+}
+function endDrag(apply) {
+  const d = drag; if (!d) return;
+  clearTimeout(d.timer); clearTimeout(d.pressT); d.card.classList.remove('pressing');
+  window.removeEventListener('pointermove', onMove);
+  window.removeEventListener('pointerup', onUp);
+  window.removeEventListener('pointercancel', onCancel);
+  drag = null;
+  if (!d.started) return;
+  const viaDock = !!(d.zone && d.zone.classList.contains('dk'));
+  const dockRect = viaDock ? d.zone.getBoundingClientRect() : null;
+  let changed = false, target = null;
+  if (apply && d.zone) {
+    const byId = {}; tasks.forEach(t => { byId[t.id] = t; });
+    const next = [];
+    ALL.forEach(z => {
+      for (const n of zoneEls[z.id].list.children) {
+        if (n === d.slot) { byId[d.id].zone = z.id; next.push(byId[d.id]); target = z; }
+        else if (n.classList.contains('task') && !n.classList.contains('lifted')) next.push(byId[n.dataset.id]);
+      }
+    });
+    if (next.length === tasks.length) { tasks = next; changed = true; }
+  }
+  document.body.classList.remove('dragging');
+  const hideDock = () => document.body.classList.remove('dock-on');
+  ALL.forEach(z => zoneEls[z.id].root.classList.remove('over'));
+  dockEls.forEach(x => x.classList.remove('over'));
+  focusId = null;
+  if (changed) { save(); announce('Moved to ' + target.name + '.'); }
+  render();
+  if (d.ptype === 'touch') buzz(6);
+
+  const ghost = d.ghost, card = board.querySelector('.task[data-id="' + d.id + '"]');
+  if (!card || RM) { ghost.remove(); hideDock(); if (changed && viaDock) showToast('Moved to ' + target.name + '.', false); return; }
+  const r = card.getBoundingClientRect();
+  const visible = r.bottom > 0 && r.top < window.innerHeight;
+  if (!visible) {
+    // the spot is off screen (dropped on the bar): shrink the card into the bar and confirm in a message
+    ghost.dataset.target = '';
+    ghost.style.transition = 'transform .24s cubic-bezier(.4,0,.8,.4), opacity .24s ease-in';
+    if (dockRect) ghost.style.transform = 'translate3d(' + (dockRect.left + dockRect.width / 2 - d.offX) + 'px,' + (dockRect.top + dockRect.height / 2 - d.offY) + 'px,0) rotate(0deg) scale(.15)';
+    ghost.style.opacity = '0';
+    setTimeout(() => { ghost.remove(); hideDock(); if (changed && dockRect) celebrate(target.id, dockRect); }, 260);
+    if (changed) showToast('Moved to ' + target.name + '.', false);
+    return;
+  }
+  // the lifted card glides into its final spot, then lands with a small pulse
+  card.classList.add('landing');
+  ghost.dataset.target = '';
+  ghost.style.transition = 'transform .28s cubic-bezier(.2,.9,.25,1.1), width .28s ease, box-shadow .28s ease';
+  ghost.style.width = r.width + 'px';
+  ghost.style.boxShadow = '0 2px 0 rgba(0,0,0,.28)';
+  ghost.style.transform = 'translate3d(' + r.left + 'px,' + r.top + 'px,0) rotate(0deg) scale(1)';
+  hideDock();
+  setTimeout(() => {
+    ghost.remove(); card.classList.remove('landing'); card.classList.add('landed');
+    const fxClass = changed ? 'fx-' + target.id : null;
+    if (fxClass) { card.classList.add(fxClass); celebrate(target.id, card.getBoundingClientRect()); }
+    setTimeout(() => { card.classList.remove('landed'); if (fxClass) card.classList.remove(fxClass); }, 460);
+  }, 290);
+}
+function onUp(e) {
+  if (!drag || e.pointerId !== drag.pid) return;
+  if (drag.started && drag.dirty) { drag.dirty = false; updateTarget(); }   // a quick flick can end before the next frame
+  endDrag(true);
+}
+function onCancel(e) { if (drag && e.pointerId === drag.pid) endDrag(false); }
+window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && drag) endDrag(false); });
+
+/* ---------- sessions and sharing with the sheet (participants) ---------- */
+function stored(key, make) {
+  try {
+    let v = localStorage.getItem(key);
+    if (!v && make) { v = make(); localStorage.setItem(key, v); }
+    return v || (make ? make() : '');
+  } catch (e) { return make ? make() : ''; }
+}
+const clientId = stored('priority-matrix-client', () => 'c' + uid() + uid());
+let myName = stored('priority-matrix-name', null).slice(0, 60);
+const sess = { id: stored('priority-matrix-session-id', null), name: '', open: true };
+const isLocked = () => !sess.open;
+let syncTimer = null, syncDirty = false, statusTimer = null;
+const nowISO = () => new Date().toISOString();
+function setSyncStatus(msg) { $('syncStatus').textContent = msg; }
+function scheduleSync(delay) {
+  if (!SYNC_ON || isLocked()) return;
+  syncDirty = true; clearTimeout(syncTimer);
+  setSyncStatus('Saving...');
+  syncTimer = setTimeout(pushSync, delay == null ? 1000 : delay);
+}
+function pushSync() {
+  if (!SYNC_ON || !syncDirty || isLocked()) return;
+  syncDirty = false;
+  fetch(SYNC_URL, {
+    method: 'POST', mode: 'no-cors', keepalive: true,
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'sync', clientId, name: myName || 'Anonymous', session: sess.id, tasks })
+  }).then(() => { if (!syncDirty) setSyncStatus('Shared with your trainer'); })
+    .catch(() => { syncDirty = true; setSyncStatus('Not shared yet. Retrying...'); clearTimeout(syncTimer); syncTimer = setTimeout(pushSync, 8000); });
+}
+
+/* Without a sheet, a small local stand-in plays the part of the Sessions tab so the whole flow can be tried in one browser. */
+const LS_KEY = 'priority-matrix-sessions';
+function lsLoad() {
+  try { const v = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); if (v && Array.isArray(v.sessions) && v.sessions.length) return v; } catch (e) { /* start fresh */ }
+  return { sessions: [{ id: 's1', name: 'Session 1', open: true, started: nowISO(), ended: '', cards: null }] };
+}
+function lsSave(st) { try { localStorage.setItem(LS_KEY, JSON.stringify(st)); } catch (e) { /* ignore */ } }
+const liveCards = () => tasks.map(t => ({ name: myName || 'You', clientId, id: t.id, text: t.text, zone: t.zone, done: t.done }));
+const pubSession = (s) => ({ id: s.id, name: s.name, open: s.open, started: s.started, ended: s.ended });
+
+async function statusCall() {
+  if (!SYNC_ON) { const st = lsLoad(); return pubSession(st.sessions[st.sessions.length - 1]); }
+  const r = await fetch(SYNC_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'status' }) });
+  const res = await r.json();
+  return res && res.ok ? res.session : null;
+}
+function applySession() {
+  const locked = isLocked();
+  document.body.classList.toggle('ended', locked);
+  $('sessBanner').hidden = !locked;
+  $('newTask').disabled = locked; $('add').disabled = locked;
+  $('sessName').textContent = sess.name ? 'Session: ' + sess.name : '';
+  if (locked) { if (drag) endDrag(false); hideMenu(); }
+}
+async function refreshStatus() {
+  let st = null;
+  try { st = await statusCall(); } catch (e) { return; }
+  if (!st) return;
+  if (sess.id && st.id !== sess.id) {            // the trainer started a new session: begin with an empty matrix
+    tasks = []; editingId = null;
+    try { localStorage.setItem(KEY, '[]'); } catch (e) { /* ignore */ }
+    render(); showToast('A new session has started.', false);
+  }
+  sess.id = st.id; sess.name = st.name; sess.open = st.open;
+  try { localStorage.setItem('priority-matrix-session-id', st.id); } catch (e) { /* ignore */ }
+  applySession();
+}
+function startStatusPolling() { stopStatusPolling(); statusTimer = setInterval(() => { if (document.visibilityState !== 'hidden') refreshStatus(); }, 10000); }
+function stopStatusPolling() { clearInterval(statusTimer); statusTimer = null; }
+
+/* ---------- admin view ---------- */
+const adm = { pw: '', cards: [], timer: null, scale: 2, person: '', showDone: true, busy: false, sessionId: '', session: null, sessions: [] };
+const SCALES = [0.8, 1, 1.25, 1.55, 1.9];
+const admEls = {};
+(function buildAdmin() {
+  const mx = $('admMatrix');
+  ZONES.forEach(z => {
+    const sec = document.createElement('section');
+    sec.className = 'zone ' + z.id; sec.setAttribute('aria-labelledby', 'ah-' + z.id);
+    sec.innerHTML = '<div class="zhead"><div><h2 id="ah-' + z.id + '"></h2><p class="qdesc"></p></div><span class="count" aria-hidden="true">0</span></div><div class="list agrid"></div>';
+    sec.querySelector('h2').textContent = z.name;
+    sec.querySelector('.qdesc').textContent = z.sub + '. ' + z.desc;
+    const list = sec.querySelector('.list'); list.dataset.empty = 'No cards here yet';
+    mx.appendChild(sec);
+    admEls[z.id] = { list, count: sec.querySelector('.count') };
+  });
+  admEls.tray = { list: $('admTrayList'), count: $('admTrayCount') };
+})();
+
+async function sha256(str) {
+  const buf = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+/* every admin request goes through here: payload is { action:'admin' } or { action:'session', op, name } */
+async function adminCall(pw, payload) {
+  const body = Object.assign({ session: adm.sessionId }, payload);
+  if (!SYNC_ON) return localAdmin(pw, body);
+  const r = await fetch(SYNC_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ password: pw }, body)) });
+  return r.json();
+}
+async function localAdmin(pw, p) {
+  let h = '';
+  try { h = await sha256(pw); } catch (e) { return { ok: false, error: 'crypto' }; }
+  if (h !== ADMIN_HASH) return { ok: false, error: 'password' };
+  const st = lsLoad(), cur = st.sessions[st.sessions.length - 1];
+  if (p.action === 'session') {
+    if (p.op === 'end' && cur.open) { cur.open = false; cur.ended = nowISO(); cur.cards = liveCards(); }
+    else if (p.op === 'reopen') { cur.open = true; cur.ended = ''; cur.cards = null; }
+    else if (p.op === 'new') {
+      if (cur.open) { cur.open = false; cur.ended = nowISO(); }
+      cur.cards = liveCards();
+      const n = st.sessions.length + 1;
+      st.sessions.push({ id: 's' + n + Date.now().toString(36).slice(-3), name: String(p.name || '').trim().slice(0, 60) || 'Session ' + n, open: true, started: nowISO(), ended: '', cards: null });
+      tasks = []; editingId = null;
+      try { localStorage.setItem(KEY, '[]'); } catch (e) { /* ignore */ }
+      render();
+      p = Object.assign({}, p, { session: '' });
+    }
+    lsSave(st);
+  }
+  const now = st.sessions[st.sessions.length - 1], viewing = p.session || now.id;
+  const found = st.sessions.find(s => s.id === viewing) || now;
+  return {
+    ok: true, local: true, viewing: found.id, updated: nowISO(), session: pubSession(now),
+    cards: found.id === now.id ? liveCards() : (found.cards || []),
+    sessions: st.sessions.map(s => Object.assign(pubSession(s), { count: s.id === now.id ? tasks.length : (s.cards || []).length }))
+  };
+}
+function admError(msg) { const e = $('admErr'); e.textContent = msg; e.hidden = !msg; }
+
+async function adminLogin() {
+  const pw = $('admPw').value;
+  if (!pw || adm.busy) return;
+  adm.busy = true; admError(''); $('admGo').textContent = 'Checking...';
+  try {
+    const res = await adminCall(pw, { action: 'admin' });
+    if (!res || !res.ok) {
+      admError(res && res.error === 'password' ? 'That password is not correct.'
+        : res && res.error === 'crypto' ? 'This browser cannot check the password. Open the page over https.'
+        : 'Could not load the cards.');
+    } else {
+      adm.pw = pw; $('admPw').value = '';
+      try { sessionStorage.setItem('pm-admin-pw', pw); } catch (e) { /* ignore */ }
+      showAdminMain(); applyAdmin(res); startAdminTimer();
+    }
+  } catch (e) {
+    admError('Could not reach the Google Sheet. Check that the script is deployed with the latest version.');
+  }
+  adm.busy = false; $('admGo').textContent = 'Open admin view';
+}
+function showAdminMain() { $('admLogin').hidden = true; $('admMain').hidden = false; applyScale(); }
+function showAdminLogin() { $('admLogin').hidden = false; $('admMain').hidden = true; $('admPw').focus(); }
+
+async function refreshAdmin() {
+  if (!adm.pw) return;
+  try {
+    const res = await adminCall(adm.pw, { action: 'admin' });
+    if (res && res.ok) applyAdmin(res);
+    else if (res && res.error === 'password') adminLock();
+    else $('admStatus').textContent = 'Could not refresh. Trying again soon.';
+  } catch (e) { $('admStatus').textContent = 'Could not refresh. Trying again soon.'; }
+}
+function startAdminTimer() { stopAdminTimer(); adm.timer = setInterval(() => { if (document.visibilityState !== 'hidden') refreshAdmin(); }, 10000); }
+function stopAdminTimer() { clearInterval(adm.timer); adm.timer = null; }
+function adminLock() {
+  stopAdminTimer(); adm.pw = ''; adm.cards = []; adm.sessionId = '';
+  try { sessionStorage.removeItem('pm-admin-pw'); } catch (e) { /* ignore */ }
+  showAdminLogin();
+}
+
+/* end, reopen or start a session */
+async function sessionOp(op, name) {
+  try {
+    const res = await adminCall(adm.pw, { action: 'session', op, name });
+    if (res && res.ok) {
+      if (op === 'new') adm.sessionId = '';
+      applyAdmin(res);
+      $('admStatus').textContent = (op === 'end' ? 'Session ended. ' : op === 'reopen' ? 'Session reopened. ' : 'New session started. ') + $('admStatus').textContent;
+    } else if (res && res.error === 'password') adminLock();
+    else $('admStatus').textContent = 'Could not change the session. Try again.';
+  } catch (e) { $('admStatus').textContent = 'Could not reach the Google Sheet. Try again.'; }
+}
+/* a small dialog in the page's own style: resolves true / the typed text, or null when cancelled */
+function askModal(o) {
+  return new Promise(resolve => {
+    const m = $('modal'), inp = $('mInput'), ok = $('mOk'), cancel = $('mCancel'), prev = document.activeElement;
+    $('mTitle').textContent = o.title; $('mText').textContent = o.text; ok.textContent = o.confirm;
+    $('mField').hidden = !o.field;
+    if (o.field) { $('mLabel').textContent = o.field; inp.value = ''; }
+    m.hidden = false; (o.field ? inp : ok).focus();
+    const done = (v) => { m.hidden = true; ok.onclick = cancel.onclick = m.onkeydown = null; if (prev && prev.focus) prev.focus(); resolve(v); };
+    ok.onclick = () => done(o.field ? inp.value.trim() : true);
+    cancel.onclick = () => done(null);
+    m.onkeydown = (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); done(null); }
+      else if (e.key === 'Enter' && e.target === inp) { e.preventDefault(); done(inp.value.trim()); }
+      else if (e.key === 'Tab') {
+        const f = [...m.querySelectorAll('input, button')].filter(x => !x.closest('[hidden]')), i = f.indexOf(document.activeElement);
+        if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+        else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+      }
+    };
+  });
+}
+
+const fmtWhen = (iso) => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); };
+function applyAdmin(res) {
+  adm.cards = res.cards || []; adm.local = !!res.local; adm.updated = new Date();
+  adm.session = res.session || null; adm.sessions = res.sessions || [];
+  const note = $('admNote');
+  note.hidden = !adm.local;
+  note.textContent = adm.local ? 'Sheet not connected. This shows only the cards saved in this browser.' : '';
+  renderSessionBar();
+  renderAdmin();
+}
+function renderSessionBar() {
+  const cur = adm.session; if (!cur) return;
+  const viewingCurrent = !adm.sessionId || adm.sessionId === cur.id;
+  $('admPill').textContent = cur.open ? 'Open' : 'Ended';
+  $('admPill').className = 'pill ' + (cur.open ? 'open' : 'closed');
+  $('admSName').textContent = cur.name;
+  const sel = $('admSessSel'); sel.innerHTML = '';
+  adm.sessions.slice().reverse().forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.id === cur.id ? '' : s.id;
+    const n = s.count + (s.count === 1 ? ' card' : ' cards');
+    o.textContent = s.id === cur.id ? s.name + ' (current, ' + n + ')' : s.name + ' (' + fmtWhen(s.started) + ', ' + n + ')';
+    sel.appendChild(o);
+  });
+  sel.value = viewingCurrent ? '' : adm.sessionId;
+  $('admEnd').hidden = !cur.open || !viewingCurrent;
+  $('admReopen').hidden = cur.open || !viewingCurrent;
+  const past = $('admPast'); past.hidden = viewingCurrent;
+  past.textContent = viewingCurrent ? '' : 'You are viewing an earlier session. Choose the current session in the list to go back.';
+}
+const byText = (a, b) => (a.name || '').toLowerCase().localeCompare((b.name || '').toLowerCase()) || a.text.toLowerCase().localeCompare(b.text.toLowerCase());
+function renderAdmin() {
+  const people = Array.from(new Set(adm.cards.map(c => c.name || 'Anonymous'))).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  if (adm.person && people.indexOf(adm.person) < 0) adm.person = '';
+  const sel = $('admPerson'); sel.innerHTML = '';
+  const all = document.createElement('option'); all.value = ''; all.textContent = 'Everyone (' + people.length + ')'; sel.appendChild(all);
+  people.forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n; sel.appendChild(o); });
+  sel.value = adm.person;
+
+  const shown = adm.cards.filter(c => (!adm.person || (c.name || 'Anonymous') === adm.person) && (adm.showDone || !c.done));
+  ALL.forEach(z => {
+    const mine = shown.filter(c => c.zone === z.id).sort(byText);
+    admEls[z.id].list.replaceChildren(...mine.map(c => {
+      const el = document.createElement('div'); el.className = 'acard' + (c.done ? ' done' : '');
+      const t = document.createElement('div'); t.className = 'atext'; t.textContent = c.text;
+      const o = document.createElement('div'); o.className = 'aown'; o.textContent = c.name || 'Anonymous';
+      el.append(t, o); return el;
+    }));
+    admEls[z.id].count.textContent = mine.length;
+  });
+  const placed = shown.filter(c => c.zone !== 'tray').length, who = new Set(shown.map(c => c.name || 'Anonymous')).size;
+  $('admStatus').textContent = shown.length + (shown.length === 1 ? ' card' : ' cards') + ' from ' + who + (who === 1 ? ' person' : ' people') +
+    ', ' + placed + ' placed. Updated ' + adm.updated.toLocaleTimeString() + '.';
+}
+function applyScale() { $('admMain').style.setProperty('--s', SCALES[adm.scale]); }
+
+/* ---------- which page is showing: intro, participant or trainer ---------- */
+function route() {
+  const h = location.hash, role = h === '#admin' ? 'admin' : h === '#participant' ? 'participant' : 'home';
+  $('home').hidden = role !== 'home'; $('app').hidden = role !== 'participant'; $('adm').hidden = role !== 'admin';
+  document.title = role === 'admin' ? 'Trainer view – Priority Matrix' : 'Priority Matrix – Urgent and Important';
+  if (role !== 'admin') stopAdminTimer();
+  if (role === 'participant') { refreshStatus(); if (SYNC_ON) startStatusPolling(); } else stopStatusPolling();
+  if (role !== 'admin') return;
+  if (adm.pw) { showAdminMain(); refreshAdmin(); startAdminTimer(); return; }
+  let saved = ''; try { saved = sessionStorage.getItem('pm-admin-pw') || ''; } catch (e) { /* ignore */ }
+  showAdminLogin();
+  if (saved) { $('admPw').value = saved; adminLogin(); }
+}
+
+/* ---------- wiring ---------- */
+$('add').addEventListener('click', addTask);
+input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addTask(); } });
+$('clearDone').addEventListener('click', clearDone);
+$('undo').addEventListener('click', undo);
+
+/* sharing */
+if (SYNC_ON) {
+  $('who').hidden = false;
+  $('myName').value = myName;
+  $('myName').addEventListener('input', () => {
+    myName = $('myName').value.trim().slice(0, 60);
+    try { localStorage.setItem('priority-matrix-name', myName); } catch (e) { /* ignore */ }
+    scheduleSync(1200);
+  });
+  window.addEventListener('online', () => { if (syncDirty) pushSync(); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && syncDirty) { clearTimeout(syncTimer); pushSync(); } });
+  if (tasks.length) scheduleSync(400);
+}
+
+/* admin */
+$('admGo').addEventListener('click', adminLogin);
+$('admPw').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); adminLogin(); } });
+$('admPerson').addEventListener('change', (e) => { adm.person = e.target.value; renderAdmin(); });
+$('admDone').addEventListener('change', (e) => { adm.showDone = e.target.checked; renderAdmin(); });
+$('admSmaller').addEventListener('click', () => { adm.scale = Math.max(0, adm.scale - 1); applyScale(); });
+$('admBigger').addEventListener('click', () => { adm.scale = Math.min(SCALES.length - 1, adm.scale + 1); applyScale(); });
+$('admRefresh').addEventListener('click', refreshAdmin);
+$('admLock').addEventListener('click', adminLock);
+$('admSessSel').addEventListener('change', (e) => { adm.sessionId = e.target.value; refreshAdmin(); });
+$('admEnd').addEventListener('click', async () => {
+  const ok = await askModal({ title: 'End this session?', text: 'Participants will no longer be able to add or move cards. Everything stays saved, and you can start a new session afterwards.', confirm: 'End session' });
+  if (ok) sessionOp('end');
+});
+$('admReopen').addEventListener('click', () => sessionOp('reopen'));
+$('admNew').addEventListener('click', async () => {
+  const name = await askModal({ title: 'Start a new session', text: 'Participants begin with an empty matrix. The cards from the current session stay saved, and you can still open them from the list.', field: 'Session name (optional)', confirm: 'Start new session' });
+  if (name !== null) sessionOp('new', name);
+});
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && location.hash === '#participant') refreshStatus(); });
+window.addEventListener('hashchange', route);
+
+render();
+route();
+})();
+</script>
+</body>
+</html>
